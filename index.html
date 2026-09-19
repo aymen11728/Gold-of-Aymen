@@ -108,7 +108,7 @@
     <div class="card">
       <div class="input-group">
         <label>سعر الأونصة العالمي (USD)</label>
-        <input type="number" id="ounce" placeholder="مثال: 5000">
+        <input type="number" id="ounce" placeholder="مثال: 2500">
       </div>
 
       <div class="input-group">
@@ -138,7 +138,7 @@
     </footer>
   </div>
 
-    <script>
+  <script>
     const GRAMS_IN_OUNCE = 31.1035;
     const GOLD_21_FACTOR = 0.875;
 
@@ -149,12 +149,9 @@
     const button = document.getElementById("calculate");
     const result = document.getElementById("price");
 
-    // 🔑 ضع المفتاح الذي نسخته من موقع goldapi.io بين علامتي التنصيص
-    const API_KEY = "goldapi-5718d967c1199a18822bdbf69de78d6c-io";
-
     // عند تحميل الصفحة
     window.addEventListener('load', () => {
-      // 1. استرجاع سعر الصرف المحفوظ سابقاً (حتى لا يدوخ المستخدم)
+      // 1. استرجاع سعر الصرف المحفوظ سابقاً
       const savedExchange = localStorage.getItem('last_exchange');
       if (savedExchange) exchangeInput.value = savedExchange;
       
@@ -162,30 +159,25 @@
       fetchOuncePrice();
     });
 
-    // دالة جلب سعر الأونصة المباشر
+    // دالة جلب سعر الأونصة المباشر (بدون الحاجة لمفتاح API)
     async function fetchOuncePrice() {
       ounceInput.placeholder = "جاري جلب السعر...";
       
       try {
-        const response = await fetch("https://www.goldapi.io/api/XAU/USD", {
-          method: 'GET',
-          headers: {
-            'x-access-token': API_KEY,
-            'Content-Type': 'application/json'
-          }
-        });
+        // استخدمنا API مجاني يدعم المتصفحات مباشرة ولا يحتاج API Key
+        const response = await fetch("https://www.chartgoldprice.com/api/data");
         
         if (response.ok) {
           const data = await response.json();
-          ounceInput.value = data.price; // وضع سعر الأونصة المباشر في الحقل
+          // استخراج سعر الأونصة بالدولار من البيانات
+          const livePrice = data.prices.gold.troy_ounce;
+          ounceInput.value = Math.round(livePrice); // تقريب الرقم ليكون بدون فواصل كثيرة
         } else {
-          // في حال وجود ضغط على السيرفر
-          ounceInput.placeholder = "مثال: 2400 (أدخل السعر يدوياً)";
+          ounceInput.placeholder = "مثال: 2500 (أدخل السعر يدوياً)";
           console.error("لا يمكن جلب السعر حالياً");
         }
       } catch (error) {
-        // في حال عدم وجود إنترنت
-        ounceInput.placeholder = "مثال: 2400 (أدخل السعر يدوياً)";
+        ounceInput.placeholder = "مثال: 2500 (أدخل السعر يدوياً)";
         console.error("فشل الاتصال بالإنترنت:", error);
       }
     }
@@ -220,6 +212,5 @@
       result.textContent = formatNumber(total.toFixed(0)) + " IQD";
     });
   </script>
-
 </body>
 </html>
