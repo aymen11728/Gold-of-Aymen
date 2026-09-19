@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حاسبة الذهب</title>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #d4af37;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(212,175,55,0.3);
+      animation: fadeIn 1s ease;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    label {
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+      background: #2a2a2a;
+      color: #fff;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(45deg,#d4af37,#f6e27a);
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 20px;
+    }
+
+    #price {
+      color: #f6e27a;
+      font-size: 24px;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .social a {
+      margin: 0 10px;
+      color: #d4af37;
+      text-decoration: none;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0; transform: translateY(20px);}
+      to {opacity:1; transform: translateY(0);}
+    }
+  </style>
+
+</head>
+<body>
+
+  <div class="container">
+    <h1>حاسبة الذهب</h1>
+
+    <div class="card">
+      <div class="input-group">
+        <label>سعر الأونصة العالمي (USD)</label>
+        <input type="number" id="ounce" placeholder="مثال: 5000">
+      </div>
+
+      <div class="input-group">
+        <label>سعر الصرف (USD → IQD)</label>
+        <input type="number" id="exchange" placeholder="مثال: 1530">
+      </div>
+
+      <div class="input-group">
+        <label>عدد الغرامات</label>
+        <input type="number" id="grams">
+      </div>
+
+      <button id="calculate">احسب السعر</button>
+
+      <div class="result">
+        <h2 id="price">0 IQD</h2>
+      </div>
+    </div>
+
+    <footer>
+      <div class="social">
+        <a href="https://www.instagram.com/m85ih?igsh=MWttd200MHpsNjlxeg==" target="_blank">Instagram</a>
+        <a href="https://t.me/aimen_iq" target="_blank">Telegram</a>
+        <a href="https://www.facebook.com/share/1AaVWdyApT/" target="_blank">Facebook</a>
+      </div>
+      <p>© جميع الحقوق محفوظة لدى ايمن رعد</p>
+    </footer>
+  </div>
+
+    <script>
+    const GRAMS_IN_OUNCE = 31.1035;
+    const GOLD_21_FACTOR = 0.875;
+
+    // ربط العناصر من الـ HTML
+    const ounceInput = document.getElementById("ounce");
+    const exchangeInput = document.getElementById("exchange");
+    const gramsInput = document.getElementById("grams");
+    const button = document.getElementById("calculate");
+    const result = document.getElementById("price");
+
+    // 🔑 ضع المفتاح الذي نسخته من موقع goldapi.io بين علامتي التنصيص
+    const API_KEY = "goldapi-5718d967c1199a18822bdbf69de78d6c-io";
+
+    // عند تحميل الصفحة
+    window.addEventListener('load', () => {
+      // 1. استرجاع سعر الصرف المحفوظ سابقاً (حتى لا يدوخ المستخدم)
+      const savedExchange = localStorage.getItem('last_exchange');
+      if (savedExchange) exchangeInput.value = savedExchange;
+      
+      // 2. جلب سعر الأونصة تلقائياً من الإنترنت
+      fetchOuncePrice();
+    });
+
+    // دالة جلب سعر الأونصة المباشر
+    async function fetchOuncePrice() {
+      ounceInput.placeholder = "جاري جلب السعر...";
+      
+      try {
+        const response = await fetch("https://www.goldapi.io/api/XAU/USD", {
+          method: 'GET',
+          headers: {
+            'x-access-token': API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          ounceInput.value = data.price; // وضع سعر الأونصة المباشر في الحقل
+        } else {
+          // في حال وجود ضغط على السيرفر
+          ounceInput.placeholder = "مثال: 2400 (أدخل السعر يدوياً)";
+          console.error("لا يمكن جلب السعر حالياً");
+        }
+      } catch (error) {
+        // في حال عدم وجود إنترنت
+        ounceInput.placeholder = "مثال: 2400 (أدخل السعر يدوياً)";
+        console.error("فشل الاتصال بالإنترنت:", error);
+      }
+    }
+
+    // دالة حساب السعر
+    function calculatePrice(ounce, exchange, grams) {
+      const gram21 = (ounce / GRAMS_IN_OUNCE) * GOLD_21_FACTOR * exchange;
+      return gram21 * grams;
+    }
+
+    // دالة تنسيق الرقم
+    function formatNumber(num) {
+      return Number(num).toLocaleString("en-US");
+    }
+
+    // عند الضغط على زر الحساب
+    button.addEventListener("click", () => {
+      const ounce = parseFloat(ounceInput.value);
+      const exchange = parseFloat(exchangeInput.value);
+      const grams = parseFloat(gramsInput.value);
+
+      if (!ounce || !exchange || !grams) {
+        result.textContent = "يرجى إدخال القيم كاملة";
+        return;
+      }
+
+      // حفظ سعر الصرف فقط في متصفح المستخدم للمرات القادمة
+      localStorage.setItem('last_exchange', exchange);
+
+      // حساب وعرض النتيجة
+      const total = calculatePrice(ounce, exchange, grams);
+      result.textContent = formatNumber(total.toFixed(0)) + " IQD";
+    });
+  </script>
+
+</body>
+</html>
